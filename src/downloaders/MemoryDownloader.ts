@@ -1,4 +1,5 @@
 import { Downloader } from "./Downloader";
+import { DelegatedEventTarget } from "../DelegatedEventTarget";
 
 function concatenate(resultConstructor: any, ...arrays: any) {
   let totalLength = 0;
@@ -14,7 +15,7 @@ function concatenate(resultConstructor: any, ...arrays: any) {
   return result;
 }
 
-export default class MemoryDownloader implements Downloader {
+export default class MemoryDownloader extends DelegatedEventTarget implements Downloader {
   download(src: string): Promise<string> {
     return new Promise((resolve) => {
       fetch(src).then(response => {
@@ -25,9 +26,7 @@ export default class MemoryDownloader implements Downloader {
         var bytesReceived = 0;
         let content: any = [];
 
-        // read() returns a promise that resolves
-        // when a value has been received
-        return reader.read().then(function processResult(result): any {
+        const processResult = (result: any): any => {
           // Result objects contain two properties:
           // done  - true if the stream has already given
           //         you all its data.
@@ -46,11 +45,21 @@ export default class MemoryDownloader implements Downloader {
           content.push(result.value);
           // result.value for fetch streams is a Uint8Array
           bytesReceived += result.value.length;
+          const event = new CustomEvent("progress", {
+            detail: {
+              bytesReceived,
+            }
+          });
+          this.dispatchEvent(event);
           console.log('Received', bytesReceived, 'bytes of data so far');
 
           // Read some more, and call this function again
           return reader.read().then(processResult);
-        });
+        }
+
+        // read() returns a promise that resolves
+        // when a value has been received
+        return reader.read().then(processResult);
       });
     });
   }

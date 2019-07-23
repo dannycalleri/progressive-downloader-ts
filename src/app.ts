@@ -10,10 +10,15 @@ const startApp = async () => {
     const anchor = document.querySelector('#root a');
     const loading = document.createElement('div');
     loading.className = 'loading';
-    loading.innerHTML = "Loading...";
+    const loadingString = "Loading:";
+    loading.innerHTML = loadingString;
     root.replaceChild(loading, anchor);
 
     const downloader = createDownloader();
+    downloader.addEventListener("progress", function(e: any) {
+      const rate = Math.floor((e.detail.bytesReceived / TOTAL_BYTES) * 100);
+      loading.innerHTML = `${loadingString} ${rate}%`;
+    });
     const downloadURL = await downloader.download('files/book.pdf');
     const button = document.createElement('a');
     button.href = downloadURL;

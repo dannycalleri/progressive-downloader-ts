@@ -1,7 +1,8 @@
 import uuidv1 from 'uuid/v1';
 import { Downloader } from "./Downloader";
+import { DelegatedEventTarget } from '../DelegatedEventTarget';
 
-export default class FileSystemDownloader implements Downloader {
+export default class FileSystemDownloader extends DelegatedEventTarget implements Downloader {
   download(src: string): Promise<string> {
     return new Promise((resolve, reject) => {
       // util handler used below
@@ -35,6 +36,12 @@ export default class FileSystemDownloader implements Downloader {
 
               await this.writeChunkOnFile(fileEntry, result.value);
               bytesReceived += result.value.length;
+              const event = new CustomEvent("progress", {
+                detail: {
+                  bytesReceived,
+                }
+              });
+              this.dispatchEvent(event);
               console.log(`Just received ${result.value.length} bytes`);
               console.log('Received', bytesReceived, 'bytes of data so far');
 

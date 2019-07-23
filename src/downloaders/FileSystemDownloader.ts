@@ -10,8 +10,10 @@ export default class FileSystemDownloader implements Downloader {
         reject(err);
       };
 
+      // accessing FileSystem APIs
       const requestFileSystem = (window as any).requestFileSystem ||
         (window as any).webkitRequestFileSystem;
+
       const onInitFs = (fileSystem: any) => {
         console.log('Opened file system: ' + fileSystem.name);
         // secure access to file before downloading data
@@ -26,7 +28,7 @@ export default class FileSystemDownloader implements Downloader {
             const processResult = async (result: any): Promise<any> => {
               if (result.done) {
                 console.log("Fetch complete");
-                // resolving with download link
+                // resolving with download link once all data has been downloaded
                 resolve(fileEntry.toURL());
                 return;
               }

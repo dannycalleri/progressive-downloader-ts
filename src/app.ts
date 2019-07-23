@@ -1,5 +1,8 @@
 import createDownloader from './downloaderFactory';
 
+// this would be normally available as metadata of the file
+const TOTAL_BYTES = 174156788;
+
 const root = document.getElementById('root');
 
 const startApp = async () => {

@@ -3,7 +3,6 @@ import { Downloader } from "./Downloader";
 
 export default class FileSystemDownloader implements Downloader {
   download(src: string): Promise<string> {
-    const that = this;
     return new Promise((resolve, reject) => {
       const errorHandler = (err: any) => {
         console.error(err);
@@ -12,9 +11,9 @@ export default class FileSystemDownloader implements Downloader {
 
       const requestFileSystem = (window as any).requestFileSystem ||
         (window as any).webkitRequestFileSystem;
-      function onInitFs(fileSystem: any) {
+      const onInitFs = (fileSystem: any) => {
         console.log('Opened file system: ' + fileSystem.name);
-        fileSystem.root.getFile(`${uuidv1()}.pdf`, {create: true}, function(fileEntry: any) {
+        fileSystem.root.getFile(`${uuidv1()}.pdf`, {create: true}, (fileEntry: any) => {
           fetch(src).then(response => {
             // response.body is a readable stream.
             // Calling getReader() gives us exclusive access to
@@ -22,9 +21,7 @@ export default class FileSystemDownloader implements Downloader {
             var reader = response.body!!.getReader();
             var bytesReceived = 0;
 
-            // read() returns a promise that resolves
-            // when a value has been received
-            return reader.read().then(async function processResult(result): Promise<any> {
+            const processResult = async (result: any): Promise<any> => {
               // Result objects contain two properties:
               // done  - true if the stream has already given
               //         you all its data.
@@ -36,14 +33,18 @@ export default class FileSystemDownloader implements Downloader {
                 return;
               }
 
-              await that.writeOnFileEntry(fileEntry, result.value);
+              await this.writeOnFileEntry(fileEntry, result.value);
               bytesReceived += result.value.length;
               console.log(`Just received ${result.value.length} bytes`);
               console.log('Received', bytesReceived, 'bytes of data so far');
 
               // Read some more, and call this function again
               return reader.read().then(processResult);
-            });
+            }
+
+            // read() returns a promise that resolves
+            // when a value has been received
+            return reader.read().then(processResult);
           });
         }, errorHandler);
       }
@@ -59,13 +60,13 @@ export default class FileSystemDownloader implements Downloader {
 
   private async writeOnFileEntry(fileEntry: any, data: Uint8Array) {
     return new Promise((resolve, reject) => {
-      fileEntry.createWriter(function(fileWriter: any) {
-        fileWriter.onwriteend = function(e: Event) {
+      fileEntry.createWriter((fileWriter: any) => {
+        fileWriter.onwriteend = (e: Event) => {
           resolve();
           console.log('Write completed.');
         };
 
-        fileWriter.onerror = function(e: Event) {
+        fileWriter.onerror = (e: Event) => {
           reject();
           console.log('Write failed: ' + e.toString());
         };

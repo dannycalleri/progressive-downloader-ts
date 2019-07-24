@@ -1,7 +1,9 @@
 import { Downloader } from "./Downloader";
 import { DelegatedEventTarget } from "../DelegatedEventTarget";
 
-function concatenate(resultConstructor: any, ...arrays: any) {
+// https://2ality.com/2015/10/concatenating-typed-arrays.html
+// by Dr. Axel Rauschmayer (follow that blog!)
+function concatenate(resultConstructor: any, ...arrays: Uint8Array[]) {
   let totalLength = 0;
   for (let arr of arrays) {
       totalLength += arr.length;
